@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Strava Activities</title>
+    <style>
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+        th { background-color: #f4f4f4; cursor: pointer; }
+        th.sort-asc::after { content: " 🔼"; }
+        th.sort-desc::after { content: " 🔽"; }
+        a { color: #0077cc; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const table = document.querySelector('table');
+            const headers = table.querySelectorAll('th');
+            let sortColumn = null;
+            let sortDirection = 1;
+
+            headers.forEach((header, index) => {
+                header.addEventListener('click', () => {
+                    const rows = Array.from(table.querySelectorAll('tbody tr'));
+                    const isNumeric = !isNaN(rows[0].children[index].innerText.replace(',', '.'));
+
+                    headers.forEach(h => h.classList.remove('sort-asc', 'sort-desc'));
+
+                    if (sortColumn === index) {
+                        sortDirection *= -1;
+                    } else {
+                        sortColumn = index;
+                        sortDirection = -1;
+                    }
+
+                    rows.sort((a, b) => {
+                        const aText = a.children[index].innerText.replace(',', '.');
+                        const bText = b.children[index].innerText.replace(',', '.');
+
+                        const aValue = isNumeric ? parseFloat(aText) || 0 : aText;
+                        const bValue = isNumeric ? parseFloat(bText) || 0 : bText;
+
+                        if (aValue < bValue) return -1 * sortDirection;
+                        if (aValue > bValue) return 1 * sortDirection;
+                        return 0;
+                    });
+
+                    header.classList.add(sortDirection === 1 ? 'sort-asc' : 'sort-desc');
+
+                    const tbody = table.querySelector('tbody');
+                    tbody.innerHTML = '';
+                    rows.forEach(row => tbody.appendChild(row));
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>Strava Activity List</h1>
+    <p><a href="/refresh">Refresh cache (load activities from Strava)</a></p>
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Title</th>
+                <th>Distance (km)</th>
+                <th>Average Speed (km/h)</th>
+                <th>Max Speed (km/h)</th>
+                <th>Average Heart Rate (bpm)</th>
+                <th>Max Heart Rate (bpm)</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for act in activities %}
+            <tr>
+                <td>{{ act.start_date_local }}</td>
+                <td>
+                    <a href="https://www.strava.com/activities/{{ act.id }}" target="_blank">
+                        {{ act.name }}
+                    </a>
+                </td>
+                <td>{{ (act.distance / 1000) | round(2) }}</td>
+                <td>{{ (act.average_speed * 3.6) | round(1) }}</td>
+                <td>{{ (act.max_speed * 3.6) | round(1) if act.max_speed else '—' }}</td>
+                <td>{{ (act.average_heartrate) if act.average_heartrate else '—' }}</td>
+                <td>{{ (act.max_heartrate) if act.max_heartrate else '—' }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
