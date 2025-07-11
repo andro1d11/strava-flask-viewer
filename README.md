@@ -3,8 +3,6 @@
 **A local Flask app to fetch, cache, and display your Strava activities — sortable, clickable, and beautiful.**  
 Supports heart rate, speed, distance, and more.
 
-![Screenshot](screenshot.png) <!-- optional screenshot -->
-
 ---
 
 ## 🚀 Features
